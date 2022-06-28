@@ -1,5 +1,7 @@
 import ctypes
 import random
+import time
+from dataclasses import dataclass
 from typing import Tuple, Optional, Union
 
 import keyboard
@@ -7,6 +9,23 @@ import pyautogui
 import pygetwindow
 
 GAME_WINDOW_TITLE = "Hunt: Showdown"
+
+
+@dataclass
+class UIElement:
+    """A coordinate or rectangle designating a specific Hunt UI element."""
+
+    x: int
+    y: int
+    width: Optional[int] = None
+    height: Optional[int] = None
+
+
+# Measured for a screen of 2560x1080px
+UI_UPGRADE_POINTS = UIElement(x=422, y=898, width=60, height=50)
+UI_TRAITS_SEARCH_INPUT = UIElement(x=980, y=225)
+UI_TRAITS_FIRST_MATCH = UIElement(x=775, y=395)
+UI_TRANSACTION_FAILED_DIALOG_OK_BTN = UIElement(x=1235, y=735)
 
 
 def is_capslock_active() -> bool:
@@ -97,3 +116,39 @@ def smooth_move(
         seconds,
         *extra,
     )
+
+
+def _search_for(text: str, clear_first: bool = True):
+    if is_capslock_active():
+        pyautogui.press("capslock")
+    if clear_first:
+        pyautogui.hotkey("ctrl", "a")
+        pyautogui.press("delete")
+    pyautogui.write(text)
+    pyautogui.press("enter")
+
+
+def _search_for_trait(trait_name: str):
+    smooth_move(UI_TRAITS_SEARCH_INPUT.x, UI_TRAITS_SEARCH_INPUT.y)
+    pyautogui.click()
+    _search_for(trait_name)
+
+
+def _maybe_get_rid_of_failure_dialog():
+    smooth_move(
+        UI_TRANSACTION_FAILED_DIALOG_OK_BTN.x, UI_TRANSACTION_FAILED_DIALOG_OK_BTN.y
+    )
+    time.sleep(0.5)
+    pyautogui.click()
+
+
+def _add_first_matching_trait():
+    smooth_move(UI_TRAITS_FIRST_MATCH.x, UI_TRAITS_FIRST_MATCH.y)
+    pyautogui.doubleClick()
+
+
+@skipped_by_escape_key
+def add_trait(trait_name: str):
+    _search_for_trait(trait_name)
+    _add_first_matching_trait()
+    _maybe_get_rid_of_failure_dialog()
