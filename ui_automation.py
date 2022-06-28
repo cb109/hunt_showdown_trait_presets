@@ -1,14 +1,21 @@
 import ctypes
+import os
 import random
+import subprocess
+import tempfile
 import time
+import uuid
 from dataclasses import dataclass
 from typing import Tuple, Optional, Union
 
 import keyboard
 import pyautogui
 import pygetwindow
+from PIL import ImageDraw
 
 GAME_WINDOW_TITLE = "Hunt: Showdown"
+COLOR_GREEN = (0, 255, 0)
+CAPTURE2TEXT_CLI_BINARY = "Capture2Text/Capture2Text_CLI.exe"
 
 
 @dataclass
@@ -26,6 +33,83 @@ UI_UPGRADE_POINTS = UIElement(x=422, y=898, width=60, height=50)
 UI_TRAITS_SEARCH_INPUT = UIElement(x=980, y=225)
 UI_TRAITS_FIRST_MATCH = UIElement(x=775, y=395)
 UI_TRANSACTION_FAILED_DIALOG_OK_BTN = UIElement(x=1235, y=735)
+
+
+def debug_upgrade_points_rectangle_with_screenshot():
+    """Create screenshot with coordinates overlayed and display it.
+
+    Screenshots work best with Hunt in Window Mode 'Borderless'.
+
+    """
+
+    # Allow screenshot even if Hunt is not running.
+    set_hunt_showdown_as_foreground_window()
+
+    tempdir = tempfile.gettempdir()
+    screenshot_filepath = os.path.join(
+        tempdir, f"hunt_showdown_trait_presets_screenshot_{uuid.uuid4()}.png"
+    )
+    with open(screenshot_filepath, "w") as f:
+        f.write("")
+    screenshot_filepath = os.path.abspath(screenshot_filepath)
+
+    image = pyautogui.screenshot()
+    drawing = ImageDraw.Draw(image)
+
+    x = UI_UPGRADE_POINTS.x
+    y = UI_UPGRADE_POINTS.y
+    width = UI_UPGRADE_POINTS.width
+    height = UI_UPGRADE_POINTS.height
+
+    drawing.rectangle(
+        (
+            (x, y),
+            (x + width, y + height),
+        ),
+        outline=COLOR_GREEN,
+    )
+    image.save(screenshot_filepath)
+
+    put_hunt_showdown_window_to_background()
+    subprocess.run(["explorer", screenshot_filepath], shell=True)
+
+
+def get_ocr_text_from_screen_rectangle(x: int, y: int, width: int, height: int) -> str:
+    args = [
+        CAPTURE2TEXT_CLI_BINARY,
+        "-l",
+        "English",
+        "--screen-rect",
+        f"{x} {y} {x + width} {y + height}",
+    ]
+    return subprocess.check_output(args)
+
+
+def get_upgrade_points_from_screenshot() -> Optional[int]:
+    set_hunt_showdown_as_foreground_window()
+
+    def _handle_common_mistakes(text):
+        return (
+            text.decode("utf-8")
+            .replace(r"\r\n", "")
+            .replace(")", "")
+            .replace("(", "")
+            .replace(".", "")
+            .replace("'", "")
+        )
+
+    text = get_ocr_text_from_screen_rectangle(
+        UI_UPGRADE_POINTS.x,
+        UI_UPGRADE_POINTS.y,
+        UI_UPGRADE_POINTS.width,
+        UI_UPGRADE_POINTS.height,
+    )
+    text = _handle_common_mistakes(text)
+    try:
+        return int(text)
+    except ValueError:
+        print(f"Could not recognize upgrade points, got: {text}")
+        return None
 
 
 def is_capslock_active() -> bool:
@@ -121,16 +205,18 @@ def smooth_move(
 def _search_for(text: str, clear_first: bool = True):
     if is_capslock_active():
         pyautogui.press("capslock")
+
     if clear_first:
         pyautogui.hotkey("ctrl", "a")
         pyautogui.press("delete")
+
     pyautogui.write(text)
     pyautogui.press("enter")
 
 
 def _search_for_trait(trait_name: str):
     smooth_move(UI_TRAITS_SEARCH_INPUT.x, UI_TRAITS_SEARCH_INPUT.y)
-    pyautogui.click()
+    pyautogui.doubleClick()
     _search_for(trait_name)
 
 
