@@ -1,0 +1,73 @@
+import sys
+
+from PySide2 import QtCore, QtGui, QtWidgets
+from PySide2.QtCore import Qt
+from PySide2.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QComboBox,
+    QDateEdit,
+    QDateTimeEdit,
+    QDial,
+    QDoubleSpinBox,
+    QFontComboBox,
+    QLabel,
+    QLCDNumber,
+    QLineEdit,
+    QMainWindow,
+    QProgressBar,
+    QPushButton,
+    QRadioButton,
+    QSlider,
+    QSpinBox,
+    QTimeEdit,
+    QVBoxLayout,
+    QGridLayout,
+    QWidget,
+)
+
+from traits import TRAITS, get_trait_by_name
+
+
+# Subclass QMainWindow to customize your application's main window
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("Hunt: Showdown - Trait Presets")
+
+        self.traitsScrollAreaWidget = QWidget()
+        self.traitsLayout = QGridLayout(self.traitsScrollAreaWidget)
+
+        row = 0
+        col = 0
+        max_cols = 3
+        for trait in TRAITS:
+            name = trait["name"]
+            label = QLabel(name)
+            pixmap = QtGui.QPixmap(f"img/{name}.png")
+            label.setPixmap(pixmap.scaledToWidth(360))
+
+            self.traitsLayout.addWidget(label, row, col)
+            col += 1
+            if col == max_cols:
+                row += 1
+                col = 0
+
+        self.scrollArea = QtWidgets.QScrollArea(self)
+        # self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setWidget(self.traitsScrollAreaWidget)
+
+        self.mainLayout = QVBoxLayout()
+        self.mainLayout.addWidget(self.scrollArea)
+
+        widget = QWidget()
+        widget.setLayout(self.mainLayout)
+        self.setCentralWidget(widget)
+
+
+app = QApplication(sys.argv)
+window = MainWindow()
+window.show()
+
+app.exec_()
