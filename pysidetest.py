@@ -166,19 +166,6 @@ class MainWindow(QMainWindow):
 
             self.availableTraitsLayout.addWidget(button)
 
-            # # Button for selected list.
-            # button = QPushButton("")
-            # button.setStyleSheet("padding: 0; border: none;")
-            # button.setIcon(pixmap)
-            # button.setIconSize(pixmap.rect().size() / 1.5)
-            # button.clicked.connect(self.onSelectedTraitClicked)
-
-            # self.selectedTraitNameToButton[name] = button
-            # self.buttonToSelectedTrait[button] = trait
-
-            # self.selectedTraitsLayout.addWidget(button)
-            # button.hide()
-
         self.availableTraitsScrollArea = QtWidgets.QScrollArea(self)
         self.availableTraitsScrollArea.setFrameShape(QFrame.NoFrame)
         self.availableTraitsScrollArea.setWidgetResizable(True)
@@ -236,12 +223,29 @@ class MainWindow(QMainWindow):
         button.setStyleSheet("padding: 0; border: none;")
         button.setIcon(pixmap)
         button.setIconSize(pixmap.rect().size() / 1.33)
-        # button.clicked.connect(self.onAvailableTraitClicked)
+        button.clicked.connect(self.onSelectedTraitClicked)
 
         self.selectedTraitNameToButton[name] = button
         self.buttonToSelectedTrait[button] = trait
 
         self.selectedTraitsLayout.addWidget(button)
+        self.updateUi()
+
+    def onSelectedTraitClicked(self):
+        button = self.sender()
+        trait = self.buttonToSelectedTrait[button]
+        name = trait["name"]
+
+        # Deselect the trait
+        for i, selectedTrait in enumerate(self.selectedTraits):
+            if name == selectedTrait["name"]:
+                self.selectedTraits.pop(i)
+                print("pop", name)
+
+        button = self.selectedTraitNameToButton[name]
+        self.selectedTraitsLayout.removeWidget(button)
+        button.setParent(None)
+        del button
 
         self.updateUi()
 
@@ -260,10 +264,6 @@ class MainWindow(QMainWindow):
         for trait in self.availableTraits:
             button = self.availableTraitNameToButton[trait["name"]]
             button.setVisible(trait not in self.selectedTraits)
-
-        # for trait in self.selectedTraits:
-        #     button = self.selectedTraitNameToButton[trait["name"]]
-        #     button.setVisible(trait in self.selectedTraits)
 
 
 app = QApplication(sys.argv)
