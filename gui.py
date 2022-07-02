@@ -15,7 +15,7 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
-from traits import TRAITS, get_trait_by_name
+from traits import TRAITS
 
 
 class FlowLayout(QLayout):
