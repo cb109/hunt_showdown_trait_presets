@@ -151,7 +151,7 @@ class MainWindow(QMainWindow):
 
             button = QPushButton("")
             button.setStyleSheet("padding: 0; border: none;")
-            button.setToolTip("Select " + name)
+            button.setToolTip("Select: " + name)
             button.setIcon(pixmap)
             button.setIconSize(pixmap.rect().size())
             button.clicked.connect(self.onAvailableTraitClicked)
@@ -178,7 +178,7 @@ class MainWindow(QMainWindow):
         self.selectedTraitsScrollableLayout.addWidget(self.selectedTraitsScrollArea)
 
         self.selectedTraitsLabel = QLabel(self._getSelectedTraitsLabelText())
-        self.selectedTraitsLabel.setStyleSheet("font-size: 20px; font-weight: bold;")
+        self.selectedTraitsLabel.setStyleSheet("font-size: 18px; font-weight: bold;")
 
         self.equipSelectedTraitsButton = QPushButton("Equip in Hunt: Showdown")
         self.equipSelectedTraitsButton.setToolTip(
@@ -194,7 +194,7 @@ class MainWindow(QMainWindow):
 
         self.availableTraitsLabel = QLabel("Available Traits")
         self.availableTraitsLabel.setStyleSheet(
-            "font-size: 20px; font-weight: bold; margin-bottom: 16px;"
+            "font-size: 18px; font-weight: bold; margin-bottom: 16px;"
         )
 
         self.mainLayout = QVBoxLayout()
@@ -202,7 +202,7 @@ class MainWindow(QMainWindow):
         self.mainLayout.addLayout(self.selectedTraitsScrollableLayout, 1)
         self.mainLayout.addWidget(self.makeVerticalDivider())
         self.mainLayout.addWidget(self.availableTraitsLabel)
-        self.mainLayout.addLayout(self.availableTraitsScrollableLayout, 4)
+        self.mainLayout.addLayout(self.availableTraitsScrollableLayout, 5)
 
         self.updateUi()
 
@@ -224,13 +224,13 @@ class MainWindow(QMainWindow):
         self.selectedTraits.append(trait)
 
         name = trait["name"]
-        pixmap = QtGui.QPixmap(f"img/{name}.png").scaledToWidth(342)
+        pixmap = QtGui.QPixmap(f"img/small/{name}.png")
 
         button = QPushButton("")
         button.setStyleSheet("padding: 0; border: none;")
-        button.setToolTip("Deselect " + name)
+        button.setToolTip("Deselect: " + name)
         button.setIcon(pixmap)
-        button.setIconSize(pixmap.rect().size() / 1.33)
+        button.setIconSize(pixmap.rect().size())
         button.clicked.connect(self.onSelectedTraitClicked)
 
         self.selectedTraitNameToButton[name] = button
