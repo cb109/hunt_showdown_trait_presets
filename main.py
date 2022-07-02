@@ -12,6 +12,7 @@ from gui import launch_gui
 def main():
     @ui_automation.skipped_by_escape_key
     def equip_selected_traits(selected_traits: list):
+        ui_automation.set_hunt_showdown_as_foreground_window()
         for trait in selected_traits:
             ui_automation.add_trait(trait["name"])
 
