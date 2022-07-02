@@ -280,7 +280,7 @@ class MainWindow(QMainWindow):
     def updateUi(self):
         self._updateMainButton()
         self._updateLabels()
-        self._updateVisibleTraitButtons()
+        self._updateAvailableTraitButtons()
 
     def _updateMainButton(self):
         self.equipSelectedTraitsButton.setEnabled(len(self.selectedTraits) > 0)
@@ -288,10 +288,10 @@ class MainWindow(QMainWindow):
     def _updateLabels(self):
         self.selectedTraitsLabel.setText(self._getSelectedTraitsLabelText())
 
-    def _updateVisibleTraitButtons(self):
+    def _updateAvailableTraitButtons(self):
         for trait in self.availableTraits:
             button = self.availableTraitNameToButton[trait["name"]]
-            button.setVisible(trait not in self.selectedTraits)
+            button.setEnabled(trait not in self.selectedTraits)
 
 
 def launch_gui(equipTraitsCallback: callable):
