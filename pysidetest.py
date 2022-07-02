@@ -20,6 +20,7 @@ from PySide2.QtWidgets import (
     QProgressBar,
     QPushButton,
     QRadioButton,
+    QFrame,
     QSizePolicy,
     QSlider,
     QSpinBox,
@@ -107,7 +108,8 @@ class FlowLayout(QLayout):
             layout_spacing_y = style.layoutSpacing(
                 QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Vertical
             )
-            space_x = spacing + layout_spacing_x
+            # space_x = spacing + layout_spacing_x
+            space_x = 0
             space_y = spacing + layout_spacing_y
             next_x = x + item.sizeHint().width() + space_x
             if next_x - space_x > rect.right() and line_height > 0:
@@ -125,38 +127,87 @@ class FlowLayout(QLayout):
         return y + line_height - rect.y()
 
 
-# Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, width=(342 * 4) + 72, height=900, maximize=False):
         super().__init__()
+
+        self.availableTraits = list(TRAITS)
+        self.selectedTraits = []
 
         self.setWindowTitle("Hunt: Showdown - Trait Presets")
 
         self.traitsScrollAreaWidget = QWidget()
         self.traitsLayout = FlowLayout(self.traitsScrollAreaWidget)
 
-        for trait in TRAITS:
+        self.buttonToTrait = {}
+        self.traitNameToButton = {}
+
+        for trait in self.availableTraits:
             name = trait["name"]
             pixmap = QtGui.QPixmap(f"img/{name}.png").scaledToWidth(342)
+
             button = QPushButton("")
             button.setStyleSheet("padding: 0; border: none;")
             button.setIcon(pixmap)
             button.setIconSize(pixmap.rect().size())
-            # button.setIconSize(QSize(346, 150))
-            # button.setPixmap(pixmap.scaledToWidth(346))
+            button.clicked.connect(self.onTraitClicked)
+
+            self.traitNameToButton[name] = button
+            self.buttonToTrait[button] = trait
 
             self.traitsLayout.addWidget(button)
 
         self.scrollArea = QtWidgets.QScrollArea(self)
+        self.scrollArea.setFrameShape(QFrame.NoFrame)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setWidget(self.traitsScrollAreaWidget)
 
+        self.availableTraitsLayout = QVBoxLayout()
+        self.availableTraitsLayout.addWidget(self.scrollArea)
+
+        self.noTraitsSelectedYetLabel = QLabel("Please select some traits")
+        self.noTraitsSelectedYetLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.noTraitsSelectedYetLabel.setMinimumHeight(120)
+
+        self.selectedTraitsLayout = QVBoxLayout()
+        self.selectedTraitsLayout.addWidget(self.noTraitsSelectedYetLabel)
+
         self.mainLayout = QVBoxLayout()
-        self.mainLayout.addWidget(self.scrollArea)
+        self.mainLayout.addLayout(self.selectedTraitsLayout)
+        self.mainLayout.addLayout(self.availableTraitsLayout)
 
         widget = QWidget()
         widget.setLayout(self.mainLayout)
         self.setCentralWidget(widget)
+
+        if maximize:
+            self.setWindowState(Qt.WindowMaximized)
+        elif width and height:
+            self.resize(width, height)
+
+    def onTraitClicked(self, trait):
+        button = self.sender()
+        trait = self.buttonToTrait[button]
+
+        if trait not in self.selectedTraits:
+            self.selectedTraits.append(trait)
+
+        self.updateUi()
+
+    def updateUi(self):
+        self._updateVisibleLabels()
+        self._updateVisibleTraitButtons()
+
+    def _updateVisibleLabels(self):
+        self.noTraitsSelectedYetLabel.setVisible(len(self.selectedTraits) == 0)
+
+    def _updateVisibleTraitButtons(self):
+        for trait in self.availableTraits:
+            button = self.traitNameToButton[trait["name"]]
+            button.show()
+        for trait in self.selectedTraits:
+            button = self.traitNameToButton[trait["name"]]
+            button.hide()
 
 
 app = QApplication(sys.argv)
