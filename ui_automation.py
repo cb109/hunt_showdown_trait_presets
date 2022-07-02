@@ -133,6 +133,7 @@ def skipped_by_escape_key(func):
 
     def inner(*args, **kwargs):
         if keyboard.is_pressed("esc"):
+            print("skipped by esc")
             return
         return func(*args, **kwargs)
 

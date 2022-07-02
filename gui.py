@@ -129,8 +129,16 @@ class FlowLayout(QLayout):
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, width=(342 * 4) + 72, height=900, maximize=False):
+    def __init__(
+        self,
+        equipTraitsCallback: callable,
+        width=(342 * 4) + 72,
+        height=900,
+        maximize=False,
+    ):
         super().__init__()
+
+        self.equipTraitsCallback = equipTraitsCallback
 
         self.orderBy = "name"
         self.availableTraits = list(TRAITS)
@@ -253,7 +261,6 @@ class MainWindow(QMainWindow):
         for i, selectedTrait in enumerate(self.selectedTraits):
             if name == selectedTrait["name"]:
                 self.selectedTraits.pop(i)
-                print("pop", name)
 
         button = self.selectedTraitNameToButton[name]
         self.selectedTraitsLayout.removeWidget(button)
@@ -263,7 +270,7 @@ class MainWindow(QMainWindow):
         self.updateUi()
 
     def equipSelectedTraitsInGame(self):
-        pass
+        self.equipTraitsCallback(self.selectedTraits)
 
     def makeVerticalDivider(self):
         # https://stackoverflow.com/questions/5671354/
@@ -291,8 +298,9 @@ class MainWindow(QMainWindow):
             button.setVisible(trait not in self.selectedTraits)
 
 
-app = QApplication(sys.argv)
-window = MainWindow()
-window.show()
+def launch_gui(equipTraitsCallback: callable):
+    app = QApplication(sys.argv)
+    window = MainWindow(equipTraitsCallback=equipTraitsCallback)
+    window.show()
 
-app.exec_()
+    app.exec_()
