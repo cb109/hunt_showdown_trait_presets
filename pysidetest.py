@@ -132,6 +132,7 @@ class MainWindow(QMainWindow):
     def __init__(self, width=(342 * 4) + 72, height=900, maximize=False):
         super().__init__()
 
+        self.orderBy = "name"
         self.availableTraits = list(TRAITS)
         self.selectedTraits = []
 
@@ -151,12 +152,13 @@ class MainWindow(QMainWindow):
         self.buttonToSelectedTrait = {}
         self.selectedTraitNameToButton = {}
 
-        for trait in self.availableTraits:
+        for trait in sorted(self.availableTraits, key=lambda t: t[self.orderBy]):
             name = trait["name"]
             pixmap = QtGui.QPixmap(f"img/{name}.png").scaledToWidth(342)
 
             button = QPushButton("")
             button.setStyleSheet("padding: 0; border: none;")
+            button.setToolTip("Select " + name)
             button.setIcon(pixmap)
             button.setIconSize(pixmap.rect().size())
             button.clicked.connect(self.onAvailableTraitClicked)
@@ -182,10 +184,20 @@ class MainWindow(QMainWindow):
         self.selectedTraitsScrollableLayout = QHBoxLayout()
         self.selectedTraitsScrollableLayout.addWidget(self.selectedTraitsScrollArea)
 
-        self.selectedTraitsLabel = QLabel("Selected Traits")
-        self.selectedTraitsLabel.setStyleSheet(
-            "font-size: 20px; font-weight: bold; margin-bottom: 16px;"
+        self.selectedTraitsLabel = QLabel(self._getSelectedTraitsLabelText())
+        self.selectedTraitsLabel.setStyleSheet("font-size: 20px; font-weight: bold;")
+
+        self.equipSelectedTraitsButton = QPushButton("Equip in Hunt: Showdown")
+        self.equipSelectedTraitsButton.setToolTip(
+            "Make sure you are on the trait selection screen in game"
         )
+        self.equipSelectedTraitsButton.setMinimumHeight(48)
+        self.equipSelectedTraitsButton.setMaximumWidth(200)
+        self.equipSelectedTraitsButton.clicked.connect(self.equipSelectedTraitsInGame)
+
+        self.selectedTraitsHeaderLayout = QHBoxLayout()
+        self.selectedTraitsHeaderLayout.addWidget(self.selectedTraitsLabel)
+        self.selectedTraitsHeaderLayout.addWidget(self.equipSelectedTraitsButton)
 
         self.availableTraitsLabel = QLabel("Available Traits")
         self.availableTraitsLabel.setStyleSheet(
@@ -193,7 +205,7 @@ class MainWindow(QMainWindow):
         )
 
         self.mainLayout = QVBoxLayout()
-        self.mainLayout.addWidget(self.selectedTraitsLabel)
+        self.mainLayout.addLayout(self.selectedTraitsHeaderLayout)
         self.mainLayout.addLayout(self.selectedTraitsScrollableLayout, 1)
         self.mainLayout.addWidget(self.makeVerticalDivider())
         self.mainLayout.addWidget(self.availableTraitsLabel)
@@ -221,6 +233,7 @@ class MainWindow(QMainWindow):
 
         button = QPushButton("")
         button.setStyleSheet("padding: 0; border: none;")
+        button.setToolTip("Deselect " + name)
         button.setIcon(pixmap)
         button.setIconSize(pixmap.rect().size() / 1.33)
         button.clicked.connect(self.onSelectedTraitClicked)
@@ -249,6 +262,9 @@ class MainWindow(QMainWindow):
 
         self.updateUi()
 
+    def equipSelectedTraitsInGame(self):
+        pass
+
     def makeVerticalDivider(self):
         # https://stackoverflow.com/questions/5671354/
         verticalDivider = QFrame()
@@ -257,8 +273,17 @@ class MainWindow(QMainWindow):
         verticalDivider.setFrameShadow(QFrame.Sunken)
         return verticalDivider
 
+    def _getSelectedTraitsLabelText(self):
+        overallCost = sum([trait["cost"] for trait in self.selectedTraits])
+        suffix = "" if not self.selectedTraits else f" ({overallCost} upgrade points)"
+        return f"Selected Traits{suffix}"
+
     def updateUi(self):
+        self._updateLabels()
         self._updateVisibleTraitButtons()
+
+    def _updateLabels(self):
+        self.selectedTraitsLabel.setText(self._getSelectedTraitsLabelText())
 
     def _updateVisibleTraitButtons(self):
         for trait in self.availableTraits:
