@@ -219,6 +219,8 @@ class MainWindow(QMainWindow):
         self.mainLayout.addWidget(self.availableTraitsLabel)
         self.mainLayout.addLayout(self.availableTraitsScrollableLayout, 4)
 
+        self.updateUi()
+
         widget = QWidget()
         widget.setLayout(self.mainLayout)
         self.setCentralWidget(widget)
@@ -281,13 +283,22 @@ class MainWindow(QMainWindow):
         return verticalDivider
 
     def _getSelectedTraitsLabelText(self):
+        numTraits = len(self.selectedTraits)
         overallCost = sum([trait["cost"] for trait in self.selectedTraits])
-        suffix = "" if not self.selectedTraits else f" ({overallCost} upgrade points)"
+        suffix = (
+            ""
+            if not self.selectedTraits
+            else f" ({numTraits} traits, {overallCost} upgrade points)"
+        )
         return f"Selected Traits{suffix}"
 
     def updateUi(self):
+        self._updateMainButton()
         self._updateLabels()
         self._updateVisibleTraitButtons()
+
+    def _updateMainButton(self):
+        self.equipSelectedTraitsButton.setEnabled(len(self.selectedTraits) > 0)
 
     def _updateLabels(self):
         self.selectedTraitsLabel.setText(self._getSelectedTraitsLabelText())
