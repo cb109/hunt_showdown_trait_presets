@@ -154,6 +154,7 @@ class MainWindow(QMainWindow):
             button.setToolTip("Select: " + name)
             button.setIcon(pixmap)
             button.setIconSize(pixmap.rect().size())
+            button.setCursor(QtGui.QCursor(Qt.PointingHandCursor))
             button.clicked.connect(self.onAvailableTraitClicked)
 
             self.availableTraitNameToButton[name] = button
@@ -186,6 +187,7 @@ class MainWindow(QMainWindow):
         )
         self.equipSelectedTraitsButton.setMinimumHeight(48)
         self.equipSelectedTraitsButton.setMaximumWidth(200)
+        self.equipSelectedTraitsButton.setCursor(QtGui.QCursor(Qt.PointingHandCursor))
         self.equipSelectedTraitsButton.clicked.connect(self.equipSelectedTraitsInGame)
 
         self.selectedTraitsHeaderLayout = QHBoxLayout()
@@ -231,6 +233,7 @@ class MainWindow(QMainWindow):
         button.setToolTip("Deselect: " + name)
         button.setIcon(pixmap)
         button.setIconSize(pixmap.rect().size())
+        button.setCursor(QtGui.QCursor(Qt.PointingHandCursor))
         button.clicked.connect(self.onSelectedTraitClicked)
 
         self.selectedTraitNameToButton[name] = button
