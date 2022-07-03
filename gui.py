@@ -1,3 +1,5 @@
+import json
+import os
 import sys
 
 from PySide2 import QtCore, QtGui, QtWidgets
@@ -15,7 +17,19 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
-from traits import TRAITS
+from traits import TRAITS, get_trait_by_name
+
+SAVE_FILE = "hunt_showdown_trait_presets.json"
+
+
+def save_selected_traits(selected_trait_names):
+    with open(SAVE_FILE, "w") as f:
+        f.write(json.dumps(selected_trait_names, indent=2))
+
+
+def load_selected_traits():
+    with open(SAVE_FILE, "r") as f:
+        return json.loads(f.read())
 
 
 class FlowLayout(QLayout):
@@ -217,9 +231,28 @@ class MainWindow(QMainWindow):
         elif width and height:
             self.resize(width, height)
 
-    def onAvailableTraitClicked(self, trait):
-        button = self.sender()
-        trait = self.buttonToAvailableTrait[button]
+        self.loadSelectedTraitsFromSaveFile()
+
+    def loadSelectedTraitsFromSaveFile(self):
+        try:
+            selectedTraitNames = load_selected_traits()
+            selectedTraits = [get_trait_by_name(name) for name in selectedTraitNames]
+            for trait in selectedTraits:
+                self.onAvailableTraitClicked(trait, commit=False)
+        except Exception as err:
+            print(err)
+
+    def saveSelectedTraitsToFile(self):
+        try:
+            save_selected_traits([trait["name"] for trait in self.selectedTraits])
+        except Exception as err:
+            print(err)
+
+    def onAvailableTraitClicked(self, trait=None, commit: bool = True):
+        if trait is None:
+            button = self.sender()
+            trait = self.buttonToAvailableTrait[button]
+
         if trait in self.selectedTraits:
             return
 
@@ -240,9 +273,12 @@ class MainWindow(QMainWindow):
         self.buttonToSelectedTrait[button] = trait
 
         self.selectedTraitsLayout.addWidget(button)
-        self.updateUi()
 
-    def onSelectedTraitClicked(self):
+        self.updateUi()
+        if commit:
+            self.updateFile()
+
+    def onSelectedTraitClicked(self, commit: bool = True):
         button = self.sender()
         trait = self.buttonToSelectedTrait[button]
         name = trait["name"]
@@ -258,6 +294,8 @@ class MainWindow(QMainWindow):
         del button
 
         self.updateUi()
+        if commit:
+            self.updateFile()
 
     def equipSelectedTraitsInGame(self):
         self.equipTraitsCallback(self.selectedTraits)
@@ -279,6 +317,9 @@ class MainWindow(QMainWindow):
             else f" ({numTraits} traits, {overallCost} upgrade points)"
         )
         return f"Selected Traits{suffix}"
+
+    def updateFile(self):
+        self.saveSelectedTraitsToFile()
 
     def updateUi(self):
         self._updateMainButton()
